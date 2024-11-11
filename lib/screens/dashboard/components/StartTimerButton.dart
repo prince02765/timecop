@@ -43,6 +43,19 @@ class _StartTimerButtonState extends State<StartTimerButton> {
             key: const Key("startTimerButton"),
             tooltip: L10N.of(context).tr.startTimer,
             onPressed: () {
+              // Check if the description is empty
+              if (bloc.state.newDescription == null ||
+                  bloc.state.newDescription!.isEmpty) {
+                // Show error message if description is empty
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("Please enter a description"),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return; // Stop further execution if description is empty
+              }
+
               final timers = BlocProvider.of<TimersBloc>(context);
               timers.add(CreateTimer(
                   description: bloc.state.newDescription,
@@ -50,8 +63,6 @@ class _StartTimerButtonState extends State<StartTimerButton> {
               bloc.add(const TimerWasStartedEvent());
             },
             child: const Stack(
-              // shenanigans to properly centre the icon (font awesome glyphs are variable
-              // width but the library currently doesn't deal with that)
               fit: StackFit.expand,
               children: <Widget>[
                 Positioned(
@@ -74,8 +85,6 @@ class _StartTimerButtonState extends State<StartTimerButton> {
               timers.add(const StopAllTimers());
             },
             child: const Stack(
-              // shenanigans to properly centre the icon (font awesome glyphs are variable
-              // width but the library currently doesn't deal with that)
               fit: StackFit.expand,
               children: <Widget>[
                 Positioned(
