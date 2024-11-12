@@ -19,12 +19,73 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:timecop/blocs/projects/bloc.dart';
-import 'package:timecop/components/ProjectColour.dart';
 import 'package:timecop/l10n.dart';
 import 'package:timecop/models/timer_entry.dart';
 import 'package:timecop/screens/timer/TimerEditor.dart';
-
 import 'package:timecop/utils/timer_utils.dart';
+
+// Map of keywords to icons
+final Map<String, IconData> keywordIconMap = {
+  "study": Icons.book,
+  "work": Icons.work,
+  "play": Icons.sports_esports,
+  "exercise": Icons.fitness_center,
+  "travel": Icons.airplanemode_active,
+  "music": Icons.music_note,
+  "shopping": Icons.shopping_cart,
+  "meeting": Icons.meeting_room,
+  "call": Icons.phone,
+  "read": Icons.menu_book,
+  "sleep": Icons.bedtime,
+  "clean": Icons.cleaning_services,
+  "cook": Icons.kitchen,
+  "eat": Icons.restaurant,
+  "drink": Icons.local_drink,
+  "relax": Icons.spa,
+  "write": Icons.edit,
+  "draw": Icons.brush,
+  "run": Icons.directions_run,
+  "walk": Icons.directions_walk,
+  "drive": Icons.directions_car,
+  "bike": Icons.directions_bike,
+  "hike": Icons.landscape,
+  "code": Icons.code,
+  "game": Icons.videogame_asset,
+  "watch": Icons.tv,
+  "film": Icons.movie,
+  "photo": Icons.camera_alt,
+  "gym": Icons.sports_gymnastics,
+  "garden": Icons.grass,
+  "swim": Icons.pool,
+  "dance": Icons.music_video,
+  "sing": Icons.mic,
+  "paint": Icons.palette,
+  "meditate": Icons.self_improvement,
+  "yoga": Icons.self_improvement,
+  "organize": Icons.folder,
+  "design": Icons.design_services,
+  "explore": Icons.explore,
+  "email": Icons.email,
+  "chat": Icons.chat,
+  "party": Icons.celebration,
+  "news": Icons.article,
+  "journal": Icons.book,
+  "learn": Icons.school,
+  "research": Icons.search,
+  "plan": Icons.event,
+  "decorate": Icons.home,
+};
+
+// Helper function to get the appropriate icon based on the description text
+IconData? getIconForDescription(String description) {
+  List<String> words = description.toLowerCase().split(" ");
+  for (String word in words) {
+    if (keywordIconMap.containsKey(word)) {
+      return keywordIconMap[word];
+    }
+  }
+  return Icons.task; // Default icon if no keyword matches
+}
 
 class StoppedTimerRowNarrowSimple extends StatefulWidget {
   final TimerEntry timer;
@@ -52,6 +113,9 @@ class _StoppedTimerRowNarrowSimpleState
     assert(widget.timer.endTime != null);
 
     final theme = Theme.of(context);
+
+    // Get dynamic icon based on the task description
+    final icon = getIconForDescription(widget.timer.description ?? "");
 
     return MouseRegion(
         onEnter: (_) => setState(() {
@@ -84,9 +148,8 @@ class _StoppedTimerRowNarrowSimpleState
               ]),
           child: ListTile(
               key: Key("stoppedTimer-${widget.timer.id}"),
-              leading: ProjectColour(
-                  project: BlocProvider.of<ProjectsBloc>(context)
-                      .getProjectByID(widget.timer.projectID)),
+              leading:
+                  Icon(icon, color: theme.colorScheme.primary), // Dynamic icon
               title: Text(
                   TimerUtils.formatDescription(
                       context, widget.timer.description),

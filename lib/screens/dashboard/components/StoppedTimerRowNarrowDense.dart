@@ -25,8 +25,70 @@ import 'package:timecop/screens/dashboard/components/ProjectTag.dart';
 import 'package:timecop/screens/dashboard/components/TimerDenseTrailing.dart';
 import 'package:timecop/screens/timer/TimerEditor.dart';
 import 'package:timecop/themes.dart';
-
 import 'package:timecop/utils/timer_utils.dart';
+
+// Map of keywords to icons
+final Map<String, IconData> keywordIconMap = {
+  "study": Icons.book,
+  "work": Icons.work,
+  "play": Icons.sports_esports,
+  "exercise": Icons.fitness_center,
+  "travel": Icons.airplanemode_active,
+  "music": Icons.music_note,
+  "shopping": Icons.shopping_cart,
+  "meeting": Icons.meeting_room,
+  "call": Icons.phone,
+  "read": Icons.menu_book,
+  "sleep": Icons.bedtime,
+  "clean": Icons.cleaning_services,
+  "cook": Icons.kitchen,
+  "eat": Icons.restaurant,
+  "drink": Icons.local_drink,
+  "relax": Icons.spa,
+  "write": Icons.edit,
+  "draw": Icons.brush,
+  "run": Icons.directions_run,
+  "walk": Icons.directions_walk,
+  "drive": Icons.directions_car,
+  "bike": Icons.directions_bike,
+  "hike": Icons.landscape,
+  "code": Icons.code,
+  "game": Icons.videogame_asset,
+  "watch": Icons.tv,
+  "film": Icons.movie,
+  "photo": Icons.camera_alt,
+  "gym": Icons.sports_gymnastics,
+  "garden": Icons.grass,
+  "swim": Icons.pool,
+  "dance": Icons.music_video,
+  "sing": Icons.mic,
+  "paint": Icons.palette,
+  "meditate": Icons.self_improvement,
+  "yoga": Icons.self_improvement,
+  "organize": Icons.folder,
+  "design": Icons.design_services,
+  "explore": Icons.explore,
+  "email": Icons.email,
+  "chat": Icons.chat,
+  "party": Icons.celebration,
+  "news": Icons.article,
+  "journal": Icons.book,
+  "learn": Icons.school,
+  "research": Icons.search,
+  "plan": Icons.event,
+  "decorate": Icons.home,
+};
+
+// Helper function to get the appropriate icon based on the description text
+IconData? getIconForDescription(String description) {
+  List<String> words = description.toLowerCase().split(" ");
+  for (String word in words) {
+    if (keywordIconMap.containsKey(word)) {
+      return keywordIconMap[word];
+    }
+  }
+  return Icons.task; // Default icon if no keyword matches
+}
 
 class StoppedTimerRowNarrowDense extends StatelessWidget {
   final TimerEntry timer;
@@ -56,6 +118,9 @@ class StoppedTimerRowNarrowDense extends StatelessWidget {
     final timeFormat = intl.DateFormat.jm();
     final duration = timer.endTime!.difference(timer.startTime);
 
+    // Get dynamic icon based on the task description
+    final icon = getIconForDescription(timer.description ?? "");
+
     return Slidable(
       startActionPane: ActionPane(
         motion: const DrawerMotion(),
@@ -73,6 +138,8 @@ class StoppedTimerRowNarrowDense extends StatelessWidget {
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
           key: Key("stoppedTimer-${timer.id}"),
+          leading: Icon(icon,
+              color: Theme.of(context).colorScheme.primary), // Dynamic icon
           title: Padding(
               padding: EdgeInsetsDirectional.only(
                   start: (directionality == TextDirection.ltr
@@ -106,7 +173,7 @@ class StoppedTimerRowNarrowDense extends StatelessWidget {
                             offset: const Offset(2, -4),
                             child: Text(
                               "+${duration.inDays}",
-                              textScaler: const TextScaler.linear(0.8),
+                              textScaleFactor: 0.8,
                               style: timeSpanStyle,
                             ),
                           )

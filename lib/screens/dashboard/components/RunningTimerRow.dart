@@ -26,6 +26,61 @@ import 'package:timecop/models/timer_entry.dart';
 import 'package:timecop/screens/timer/TimerEditor.dart';
 import 'package:timecop/utils/timer_utils.dart';
 
+// Define the map of keywords to icons
+final Map<String, IconData> keywordIconMap = {
+  "study": Icons.book,
+  "work": Icons.work,
+  "play": Icons.sports_esports,
+  "exercise": Icons.fitness_center,
+  "travel": Icons.airplanemode_active,
+  "music": Icons.music_note,
+  "shopping": Icons.shopping_cart,
+  "meeting": Icons.meeting_room,
+  "call": Icons.phone,
+  "read": Icons.menu_book,
+  "sleep": Icons.bedtime,
+  "clean": Icons.cleaning_services,
+  "cook": Icons.kitchen,
+  "eat": Icons.restaurant,
+  "drink": Icons.local_drink,
+  "relax": Icons.spa,
+  "write": Icons.edit,
+  "draw": Icons.brush,
+  "run": Icons.directions_run,
+  "walk": Icons.directions_walk,
+  "drive": Icons.directions_car,
+  "bike": Icons.directions_bike,
+  "hike": Icons.landscape,
+  "code": Icons.code,
+  "game": Icons.videogame_asset,
+  "watch": Icons.tv,
+  "film": Icons.movie,
+  "photo": Icons.camera_alt,
+  "gym": Icons.sports_gymnastics,
+  "garden": Icons.grass,
+  "swim": Icons.pool,
+  "dance": Icons.music_video,
+  "sing": Icons.mic,
+  "paint": Icons.palette,
+  "meditate": Icons.self_improvement,
+  "yoga": Icons.self_improvement,
+  "organize": Icons.folder,
+  "design": Icons.design_services,
+  "explore": Icons.explore,
+  "email": Icons.email,
+  "chat": Icons.chat,
+  "party": Icons.celebration,
+  "relax": Icons.wb_sunny,
+  "news": Icons.article,
+  "journal": Icons.book,
+  "learn": Icons.school,
+  "research": Icons.search,
+  "study": Icons.school,
+  "plan": Icons.event,
+  "decorate": Icons.home,
+  "call": Icons.call,
+};
+
 class RunningTimerRow extends StatelessWidget {
   final TimerEntry timer;
   final DateTime now;
@@ -33,9 +88,24 @@ class RunningTimerRow extends StatelessWidget {
   const RunningTimerRow({Key? key, required this.timer, required this.now})
       : super(key: key);
 
+  // Helper function to determine the icon based on the description text
+  IconData? _getIconForDescription(String description) {
+    List<String> words = description.toLowerCase().split(" ");
+    for (String word in words) {
+      if (keywordIconMap.containsKey(word)) {
+        return keywordIconMap[word];
+      }
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    // Get the appropriate icon for the task description, if available
+    IconData? icon = _getIconForDescription(timer.description ?? "");
+
     return Slidable(
       startActionPane: ActionPane(
           motion: const DrawerMotion(),
@@ -74,11 +144,15 @@ class RunningTimerRow extends StatelessWidget {
             )
           ]),
       child: ListTile(
-          leading: ProjectColour(
-              project: BlocProvider.of<ProjectsBloc>(context)
-                  .getProjectByID(timer.projectID)),
-          title: Text(TimerUtils.formatDescription(context, timer.description),
-              style: TimerUtils.styleDescription(context, timer.description)),
+          leading: icon != null
+              ? Icon(icon, color: theme.colorScheme.primary)
+              : ProjectColour(
+                  project: BlocProvider.of<ProjectsBloc>(context)
+                      .getProjectByID(timer.projectID)),
+          title: Text(
+            TimerUtils.formatDescription(context, timer.description),
+            style: TimerUtils.styleDescription(context, timer.description),
+          ),
           trailing: Row(mainAxisSize: MainAxisSize.min, children: [
             Text(timer.formatTime(),
                 style: theme.textTheme.bodyMedium?.copyWith(
