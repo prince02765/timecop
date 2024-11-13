@@ -413,14 +413,27 @@ class _TimerEditorState extends State<TimerEditor> {
             ),
             ListTile(
               title: Text(L10N.of(context).tr.notes),
-              onTap: () async => await _editNotes(context),
             ),
             Expanded(
-                child: InkWell(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: Colors.black, width: 1), // Black border
+                    borderRadius:
+                        BorderRadius.circular(4), // Optional rounded corners
+                  ),
+                  child: InkWell(
                     onTap: () async => await _editNotes(context),
                     child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                        child: Markdown(data: _notes!)))),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Markdown(data: _notes!),
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
