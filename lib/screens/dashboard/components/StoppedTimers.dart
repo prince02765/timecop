@@ -157,8 +157,55 @@ class _DayGroupingRows extends StatelessWidget {
   }
 }
 
-class StoppedTimers extends StatelessWidget {
+class StoppedTimers extends StatefulWidget {
   const StoppedTimers({Key? key}) : super(key: key);
+
+  @override
+  _StoppedTimersState createState() => _StoppedTimersState();
+}
+
+class _StoppedTimersState extends State<StoppedTimers> {
+  final ScrollController _scrollController = ScrollController();
+  bool _showScrollDownButton = true;
+  bool _showScrollUpButton = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    setState(() {
+      // Show or hide the scroll buttons based on the scroll position
+      _showScrollUpButton = _scrollController.position.pixels > 0;
+      _showScrollDownButton = _scrollController.position.pixels <
+          _scrollController.position.maxScrollExtent;
+    });
+  }
+
+  void _scrollToTop() {
+    _scrollController.animateTo(
+      0.0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _scrollToBottom() {
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
+  }
 
   static List<_DayGrouping> _groupDays(
       List<_DayGrouping> days, TimerEntry timer) {
@@ -187,74 +234,114 @@ class StoppedTimers extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TimersBloc, TimersState>(
-      builder: (BuildContext context, TimersState timersState) {
-        return BlocBuilder<DashboardBloc, DashboardState>(
-          builder: (BuildContext context, DashboardState dashboardState) {
-            // start our list of timers
-            var timers = timersState.timers.reversed
-                .where((timer) => timer.endTime != null);
+    return Stack(
+      children: [
+        BlocBuilder<TimersBloc, TimersState>(
+          builder: (BuildContext context, TimersState timersState) {
+            return BlocBuilder<DashboardBloc, DashboardState>(
+              builder: (BuildContext context, DashboardState dashboardState) {
+                var timers = timersState.timers.reversed
+                    .where((timer) => timer.endTime != null);
 
-            // filter based on filters
-            if (dashboardState.filterStart != null) {
-              timers = timers.where((timer) =>
-                  timer.startTime.isAfter(dashboardState.filterStart!));
-            }
-            if (dashboardState.filterEnd != null) {
-              timers = timers.where((timer) =>
-                  timer.startTime.isBefore(dashboardState.filterEnd!));
-            }
-
-            // filter based on selected projects
-            timers = timers.where((t) =>
-                !dashboardState.hiddenProjects.any((p) => p == t.projectID));
-
-            // filter based on archived and deleted projects
-            final projectsBloc = BlocProvider.of<ProjectsBloc>(context);
-            timers = timers.where((t) =>
-                projectsBloc.getProjectByID(t.projectID)?.archived != true);
-
-            // filter based on search
-            if (dashboardState.searchString != null) {
-              timers = timers.where((timer) {
-                // allow searching using a regex if surrounded by `/` and `/`
-                if (dashboardState.searchString!.length > 2 &&
-                    dashboardState.searchString!.startsWith("/") &&
-                    dashboardState.searchString!.endsWith("/")) {
-                  return timer.description?.contains(RegExp(
-                          dashboardState.searchString!.substring(
-                              1, dashboardState.searchString!.length - 1))) ??
-                      true;
-                } else {
-                  return dashboardState.searchString == null
-                      ? true
-                      : timer.description?.toLowerCase().contains(
-                              dashboardState.searchString!.toLowerCase()) ??
-                          true;
+                if (dashboardState.filterStart != null) {
+                  timers = timers.where((timer) =>
+                      timer.startTime.isAfter(dashboardState.filterStart!));
                 }
-              });
-            }
+                if (dashboardState.filterEnd != null) {
+                  timers = timers.where((timer) =>
+                      timer.startTime.isBefore(dashboardState.filterEnd!));
+                }
 
-            final days = timers.fold(<_DayGrouping>[], _groupDays);
+                timers = timers.where((t) => !dashboardState.hiddenProjects
+                    .any((p) => p == t.projectID));
 
-            final isFiltered = (dashboardState.filterStart != null ||
-                dashboardState.filterEnd != null);
+                final projectsBloc = BlocProvider.of<ProjectsBloc>(context);
+                timers = timers.where((t) =>
+                    projectsBloc.getProjectByID(t.projectID)?.archived != true);
 
-            return ListView.builder(
-              itemCount: isFiltered ? days.length + 1 : days.length,
-              itemBuilder: isFiltered
-                  ? (BuildContext context, int index) => (index < days.length)
-                      ? _DayGroupingRows(dayGrouping: days[index])
-                      : FilterText(
-                          filterStart: dashboardState.filterStart,
-                          filterEnd: dashboardState.filterEnd,
-                        )
-                  : (BuildContext context, int index) =>
-                      _DayGroupingRows(dayGrouping: days[index]),
+                if (dashboardState.searchString != null) {
+                  timers = timers.where((timer) {
+                    if (dashboardState.searchString!.length > 2 &&
+                        dashboardState.searchString!.startsWith("/") &&
+                        dashboardState.searchString!.endsWith("/")) {
+                      return timer.description?.contains(RegExp(
+                              dashboardState.searchString!.substring(1,
+                                  dashboardState.searchString!.length - 1))) ??
+                          true;
+                    } else {
+                      return dashboardState.searchString == null
+                          ? true
+                          : timer.description?.toLowerCase().contains(
+                                  dashboardState.searchString!.toLowerCase()) ??
+                              true;
+                    }
+                  });
+                }
+
+                final days = timers.fold(<_DayGrouping>[], _groupDays);
+
+                final isFiltered = (dashboardState.filterStart != null ||
+                    dashboardState.filterEnd != null);
+
+                return ListView.builder(
+                  controller: _scrollController,
+                  itemCount: isFiltered ? days.length + 1 : days.length,
+                  itemBuilder: isFiltered
+                      ? (BuildContext context, int index) =>
+                          (index < days.length)
+                              ? _DayGroupingRows(dayGrouping: days[index])
+                              : FilterText(
+                                  filterStart: dashboardState.filterStart,
+                                  filterEnd: dashboardState.filterEnd,
+                                )
+                      : (BuildContext context, int index) =>
+                          _DayGroupingRows(dayGrouping: days[index]),
+                );
+              },
             );
           },
-        );
-      },
+        ),
+        if (_showScrollUpButton)
+          Positioned(
+            bottom: 80,
+            left: MediaQuery.of(context).size.width / 2 - 28,
+            child: GestureDetector(
+              onTap: _scrollToTop,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withOpacity(0.5),
+                ),
+                padding: const EdgeInsets.all(8),
+                child: const Icon(
+                  Icons.arrow_upward,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+            ),
+          ),
+        if (_showScrollDownButton)
+          Positioned(
+            bottom: 16,
+            left: MediaQuery.of(context).size.width / 2 - 28,
+            child: GestureDetector(
+              onTap: _scrollToBottom,
+              child: Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withOpacity(0.5),
+                ),
+                padding: const EdgeInsets.all(8),
+                child: const Icon(
+                  Icons.arrow_downward,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
